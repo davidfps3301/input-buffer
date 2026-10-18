@@ -1,63 +1,86 @@
-# dynamicv3
+#input-buffering
 What is it?
-Input Buffering is a mod for Geometry Dash that expands the time window in which the player can successfully hit a click. Its purpose is to eliminate deaths caused by frame imprecision in extreme levels, where a single frame of difference decides whether you survive or die.
+It's an experimental mod for Geometry Dash, developed with Geode, that temporarily holds the player's inputs (press and release of the jump button) before applying them to the game. Its purpose is to explore the concept of input buffering described in the reference video, although its current implementation is a didactic approximation, not a functional replica of the original mod.
 
-In simple terms: it makes difficult clicks easier to hit without requiring the player to execute them with perfect precision.
+In simple terms: it's a mod that delays your clicks N ticks before applying them, instead of executing them instantly.
 
 What does it do exactly?
-The mod implements an intelligent input buffer. When the player presses or releases the jump button, the mod does not execute the action immediately. Instead:
+When the player presses or releases the jump button, the mod does not execute the action immediately. Instead:
 
-It holds the player's intent (the click or the release).
+It saves the player's intent in an internal flag (pendingJump or pendingRelease).
 
-It simulates the next physics ticks to determine which one would be safe for the input.
+It accumulates ticks on each physics step while waiting.
 
-It applies the input on the correct tick, not on the tick when the player clicked.
+It applies the input after N ticks, without checking whether that moment is safe or not.
 
-The result is that the player can click several ticks early, and the mod automatically shifts it to the exact tick where the action is valid. This turns a 1-frame timing (nearly impossible to execute consistently) into a 2, 4, or 8-frame margin, depending on the configured stage.
+The behavior varies depending on the game mode:
+
+Cube: holds the press until the player touches the ground (m_isOnGround == true). If the player clicks in the air, the jump executes upon landing. This replicates GD's native hold-to-jump, it doesn't improve it.
+
+Wave, Ship, UFO, Ball, Robot, Spider: holds both press and release for exactly N ticks before applying them, with no additional condition.
 
 How is it controlled?
 F6 key: cycles through the mod's stages.
 
-Off: vanilla behavior, no assistance.
+Off: vanilla behavior, no holding.
 
-Stage 1 (2 ticks): 2-frame margin.
+2t: holds 2 ticks.
 
-Stage 2 (4 ticks): 4-frame margin.
+4t: holds 4 ticks.
 
-Stage 3 (8 ticks): 8-frame margin.
+8t: holds 8 ticks.
 
-On-screen overlay: shows the current stage and how many ticks were "saved" on the last applied input.
+On-screen overlay: displays Dynamic[stage] saved:N last:action, where saved indicates how many ticks accumulated before the last input was applied, and last indicates which action was applied (jump, hold, release).
 
 Which game modes does it work in?
-Cube: allows clicking in the air, and the jump executes upon landing, extending the native hold-to-jump beyond what the game allows.
+Mode	Behavior	Effectiveness
+Cube	Waits for ground to jump	None: replicates vanilla hold-to-jump
+Wave (press)	Fixed N-tick delay	Very limited: only works if you click exactly N ticks early
+Wave (release)	Fixed N-tick delay	Partial: this is the only thing that comes close to the video's behavior
+Ship, UFO, Ball, Robot, Spider	Fixed N-tick delay	Very limited: same limitation as wave press
+What does it NOT do?
+It's important to be clear about the limitations:
 
-Wave: the most critical case. It buffers both press (hold) and release, eliminating deaths from releasing a frame early or holding a frame too long.
+❌ It does not simulate the game's physics: it doesn't calculate future positions or velocities.
 
-Ship, UFO, Ball, Robot, Spider: buffers inputs the same way, with mode-specific calibration.
+❌ It does not check collisions: it doesn't know whether the pending input will save the player or kill them.
 
-Why is it controversial?
-The mod makes the game significantly easier in levels where everything is decided by frames. A player using it with 2 ticks can already pass clicks that in vanilla would require perfect precision. With 8 ticks
+❌ It does not choose the correct tick: it applies the input N ticks later, without evaluating whether it's safe.
 
-That's why:
+❌ It does not forgive late clicks: if you click at the correct moment or late, you die.
 
-It goes against the competitive integrity of the Demon List and the extreme levels community.
+❌ It does not forgive arbitrary early clicks: it only works if you click exactly N ticks early, not "any click within the window".
 
-It is practically undetectable with 1 or 2 ticks, because the delay is minimal and the result looks like a perfectly executed click.
-
-Its existence is a warning: it shows that the community needs better cheat detection methods, especially as levels become increasingly difficult.
+❌ It does not improve cube: cube behavior is equivalent to vanilla.
 
 How does it work technically?
-The mod hooks into the game's physics functions, specifically PlayerObject::update and the input handlers. On each tick:
+The mod hooks into three game functions via Geode:
 
-It checks if there is a pending input (buffered click or release).
+PlayerObject::pushButton: intercepts the jump button press. If the mod is active, it saves the intent instead of executing it.
 
-It simulates the next physics step with that input applied.
+PlayerObject::releaseButton: intercepts the release. Same behavior: saves the intent if the mod is active.
 
-It checks whether the player would survive (no lethal collision).
+PlayerObject::update: on each physics tick, increments the counters and applies the input when the N limit is reached (or when the player touches the ground, in the case of cube).
 
-If they survive, it applies the input; if not, it waits for the next tick (until the N-tick window is exhausted).
+Additionally, a fourth hook in CCKeyboardDispatcher::dispatchKeyboardMSG detects the F6 key to cycle stages, and a fifth hook in PlayLayer::init creates the visual overlay.
 
-This process repeats until a safe tick is found or the window expires. It is the same technique used by Click Between Frames (CBF) for sub-frame precision, but applied specifically to input buffering
+What is it useful for, then?
+For three specific things:
+
+Didactic purposes: understanding how to structure an input buffer in Geode (hooks, global state, overlay, control keys).
+
+Conceptual testing: experimentally measuring the effect of a fixed N-tick delay across different modes and timings.
+
+Starting point: it serves as a base on which to add physics simulation and collision detection to get closer to the video's mod.
+
+Why is it controversial?
+Although its implementation is limited, the mod does illustrate the problem that the video denounces:
+
+With 2 ticks, the delay is small enough that certain difficult clicks pass more consistently if the player learns to click exactly 2 ticks early.
+
+The interface (F6, overlay, stages) replicates the original mod's.
+
+Its existence demonstrates how easy it is to build an assistance tool without prior programming experience, using AI and public APIs like Geode.
 
 <img src="logo.png" width="150" alt="the mod's logo" />
 
