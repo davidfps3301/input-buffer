@@ -1,0 +1,24 @@
+{
+    "geode": "5.11.2",
+    "gd": {
+        "win": "2.2081",
+        "android": "2.2081"
+    },
+    "id": "mipalo-replica",
+    "name": "Dynamic Replica",
+    "version": "v1.0.0",
+    "developer": "mipalo",
+    "description": "Replica educativa del mod Dynamic para testeo de buffer de inputs por ticks. Solo para entornos controlados.",
+    "repository": "",
+    "issues": {
+        "info": "Solo para testeo en niveles propios y entornos controlados. No usar en niveles online ni competitivos."
+    },
+    "settings": {
+        "show-console-label": {
+            "name": "Mostrar contador en pantalla",
+            "description": "Muestra la etapa actual del buffer y los ticks guardados en la esquina superior izquierda.",
+            "type": "bool",
+            "default": true
+        }
+    }
+}
