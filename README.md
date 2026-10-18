@@ -36,7 +36,7 @@ Wave: the most critical case. It buffers both press (hold) and release, eliminat
 Ship, UFO, Ball, Robot, Spider: buffers inputs the same way, with mode-specific calibration.
 
 Why is it controversial?
-The mod makes the game significantly easier in levels where everything is decided by frames. A player using it with 2 ticks can already pass clicks that in vanilla would require perfect precision. With 8 ticks, the game becomes "ridiculously easy" in the words of the video's creator.
+The mod makes the game significantly easier in levels where everything is decided by frames. A player using it with 2 ticks can already pass clicks that in vanilla would require perfect precision. With 8 ticks
 
 That's why:
 
